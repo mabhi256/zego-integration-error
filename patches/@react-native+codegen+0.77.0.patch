@@ -1,0 +1,25 @@
+diff --git a/node_modules/@react-native/codegen/lib/cli/combine/combine-js-to-schema.js b/node_modules/@react-native/codegen/lib/cli/combine/combine-js-to-schema.js
+index c5a1054..b799f92 100644
+--- a/node_modules/@react-native/codegen/lib/cli/combine/combine-js-to-schema.js
++++ b/node_modules/@react-native/codegen/lib/cli/combine/combine-js-to-schema.js
+@@ -105,8 +105,18 @@ function combineSchemas(files) {
+ function expandDirectoriesIntoFiles(fileList, platform, exclude) {
+   return fileList
+     .flatMap(file => {
+-      if (!fs.lstatSync(file).isDirectory()) {
+-        return [file];
++      try {
++        if (!fs.lstatSync(file).isDirectory()) {
++          return [file];
++        }
++      } catch (error) {
++        // If the directory doesn't exist, try to resolve it relative to project root
++        const projectRoot = path.resolve(__dirname, '../../../../..');
++        const absolutePath = path.resolve(projectRoot, file.replace('../', ''));
++        if (!fs.existsSync(absolutePath)) {
++          return [];
++        }
++        file = absolutePath;
+       }
+       const filePattern = path.sep === '\\' ? file.replace(/\\/g, '/') : file;
+       return glob.sync(`${filePattern}/**/*.{js,ts,tsx}`, {
